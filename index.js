@@ -15,13 +15,24 @@ const extract = watt(function*(next) {
       return line.split(",");
     })
     .filter(row => row[2] === '"CH"')
-    .take(100)
+    .take(2)
     .map(row => {
       return {
-        from: long2ip(row[0].replace(/"/g, "")),
-        to: long2ip(row[1].replace(/"/g, ""))
+        from: +row[0].replace(/"/g, ""),
+        to: +row[1].replace(/"/g, "")
       };
     })
+    .reduce([], (ips, range) => {
+      for (let lip = range.from; lip < range.to; lip++) {
+        const ip = long2ip(lip);
+        if (ip.endsWith("0") || ip.endsWith("255")) {
+          continue;
+        }
+        ips.push(ip);
+      }
+      return ips;
+    })
+    .flatten()
     .collect()
     .toCallback(next);
   return res;
